@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "departure": "Parma",
+        "destination": "Roma",
+        "flight_date": "2026-07-01",
+        "dep_time": "10:00",
+        "duration": "1h 30m",
+        "price": 50.00,
+        "availability": 100
+    },
+    {
+        "id": 2,
+        "departure": "Milano",
+        "destination": "Napoli",
+        "flight_date": "2026-07-02",
+        "dep_time": "12:00",
+        "duration": "1h 45m",
+        "price": 60.00,
+        "availability": 80
+    }
+]
