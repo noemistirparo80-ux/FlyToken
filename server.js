@@ -20,7 +20,12 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             const purchaseData = JSON.parse(body);
             //simulatepurchase è una funzione che simula l'acquisto di un volo e restituisce una risposta
-            const response = FlightService.simulatePurchase(purchaseData);
+            const response = FlightService.simulatePurchase(
+                purchaseData.flightObject,
+                purchaseData.userObject,
+                purchaseData.passengerName
+            );
+            res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(response));
         });
     }
