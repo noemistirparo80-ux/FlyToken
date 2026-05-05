@@ -1,7 +1,7 @@
-import { Flight } from "./Flight.js";
-import { User } from "./User.js";
+const Flight = require('./Flight'); 
+const User =require('./User');
 
-export class Reservation {
+class Reservation {
     constructor(id, passengerName, flightObject, userObject, status, idNFT, finalPrice) {
         this.id = id;
         this.flight = flightObject;
@@ -16,3 +16,5 @@ export class Reservation {
 
     }
 }
+
+module.exports = Reservation;
