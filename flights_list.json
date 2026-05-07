@@ -18,5 +18,35 @@
         "duration": "1h 45m",
         "price": 60.00,
         "availability": 80
+    },
+    {
+        "id": 3,
+        "departure": "Venezia",
+        "destination": "Firenze",
+        "flight_date": "2026-07-03",
+        "dep_time": "14:00",
+        "duration": "1h 15m",
+        "price": 55.00,
+        "availability": 90
+    },
+    {
+        "id": 4,
+        "departure": "Bologna",
+        "destination": "Catania",
+        "flight_date": "2026-07-04",
+        "dep_time": "16:00",
+        "duration": "2h 30m",
+        "price": 70.00,
+        "availability": 70
+    },
+    {
+        "id": 5,
+        "departure": "Genova",
+        "destination": "Palermo",
+        "flight_date": "2026-07-05",
+        "dep_time": "18:00",
+        "duration": "2h 45m",
+        "price": 65.00,
+        "availability": 60
     }
 ]

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 function App () { 
   // 1. Creiamo uno stato per memorizzare i dati dei voli
-  const [voli, setVoli] = useState([]) 
+  const [voli, setVoli] = useState([]);
 
   // 2. Usiamo useEffect per eseguire una funzione al montaggio del componente, che farà una richiesta al server per ottenere i dati dei voli
   useEffect(() => { 
@@ -32,10 +32,11 @@ function App () {
       <ul>
         {/* 4. Cicliamo l'array dei voli con .map() */}
         {voli.map((volo) => (
-          <li key={volo.id} style={{ marginBottom: '10px' }}>
+          <li key={volo.id} style={{ marginBottom: '20px', borderBottom: '1px solid #ccc' }}>
             <strong>{volo.departure} ➔ {volo.destination}</strong> <br/>
-            Data: {volo.flight_date} | Ora: {volo.dep_time} | 
-            Prezzo: €{volo.price} | Posti: {volo.availability}
+            Prezzo: €{volo.price} | Posti: {volo.availability} <br/>
+            {/* Aggiungiamo un tastino per ogni volo */}
+            <button onClick={() => prenotaVolo(volo)}>Prenota questo volo</button>
           </li>
         ))}
       </ul>

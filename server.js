@@ -10,7 +10,10 @@ const server = http.createServer((req, res) => {
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
                 return res.end('Error reading flight data');
             }
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*' //questa intestazione consente a qualsiasi origine di accedere a questa risorsa, il che è utile durante lo sviluppo quando il frontend e il backend sono in esecuzione su domini diversi.
+            });
             res.end(data);
         });
     }
@@ -25,7 +28,10 @@ const server = http.createServer((req, res) => {
                 purchaseData.userObject,
                 purchaseData.passengerName
             );
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*' //questa intestazione consente a qualsiasi origine di accedere a questa risorsa, il che è utile durante lo sviluppo quando il frontend e il backend sono in esecuzione su domini diversi.
+            });
             res.end(JSON.stringify(response));
         });
     }
