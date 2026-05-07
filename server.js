@@ -5,7 +5,7 @@ const FlightService = require('./services/FlightService');//importa il modulo Fl
 
 const server = http.createServer((req, res) => { 
     if (req.url === '/api/flights' && req.method === 'GET') { //controlla se la richiesta è per l'endpoint "/api/flights" e se il metodo HTTP è GET. Se entrambe le condizioni sono vere, procede a leggere il file JSON che contiene i dati dei voli.  
-        fs.readFile('./lista_voli.json', (err, data) => {
+        fs.readFile('./flights_list.json', (err, data) => {
             if (err) {
                 res.writeHead(500, { 'Content-Type': 'text/plain' });
                 return res.end('Error reading flight data');
@@ -35,6 +35,6 @@ const server = http.createServer((req, res) => {
     }
 });
 
-server.listen(3000, () => {
-    console.log('Server running on port 3000');
+server.listen(3001, () => {
+    console.log('Server running on port 3001');
 });
