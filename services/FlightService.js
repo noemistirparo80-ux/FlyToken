@@ -21,9 +21,9 @@ const FlightService = {
         );
 
         return {
-            successo: true,
-            messaggio: "Acquisto completato con successo",
-            biglietto: newTicket
+            success: true,
+            messagge: "Acquisto completato con successo",
+            ticket: newTicket
         };
     }
 };

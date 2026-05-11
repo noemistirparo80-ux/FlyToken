@@ -2,8 +2,20 @@ const http = require('http');//http è un modulo integrato in Node.js che consen
 const fs = require('fs');//fs è un modulo integrato in Node.js che consente di lavorare con il file system, ad esempio per leggere o scrivere file. In questo caso, viene utilizzato per leggere il file JSON che contiene i dati dei voli.
 const FlightService = require('./services/FlightService');//importa il modulo FlightService, che contiene la logica per simulare l'acquisto di un volo. Questo modulo è definito in un file separato all'interno della cartella "services".
 
+// Prepariamo le regole CORS in un blocco unico per non dimenticarle mai
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'OPTIONS, POST, GET',
+    'Access-Control-Allow-Headers': 'Content-Type'
+};
 
 const server = http.createServer((req, res) => { 
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204, corsHeaders);
+        return res.end();
+    }
+    
     if (req.url === '/api/flights' && req.method === 'GET') { //controlla se la richiesta è per l'endpoint "/api/flights" e se il metodo HTTP è GET. Se entrambe le condizioni sono vere, procede a leggere il file JSON che contiene i dati dei voli.  
         fs.readFile('./flights_list.json', (err, data) => {
             if (err) {
