@@ -7,6 +7,15 @@ function App () {
   // Usiamo nomi coerenti per il passeggero
   const [passengerName, setPassengerName] = useState("");
   const [ticket, setTicket] = useState(null);
+  //stato per admin
+  const [isAdmin, setIsAdmin] = useState(false);
+  //stati per aggiunta volo
+  const [newDeparture, setNewDeparture] = useState("");
+  const [newDestination, setNewDestination] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
+  const [newAvailability, setNewAvailability] = useState("");
 
   // 2. Il caricamento iniziale
   useEffect(() => { 
@@ -28,6 +37,46 @@ function App () {
     setFlightSelected(flightSelected);
   }
 
+  // 3b. Aggiunta volo (solo per admin)
+  async function handleCreateFlight() {
+    if (!newDeparture || !newDestination || !newPrice || !newDate || !newTime || !newAvailability) {
+      alert("Compila tutti i campi per aggiungere un volo");
+      return;
+    }
+    const newFlightData = {
+      departure: newDeparture,
+      destination: newDestination,
+      price: parseFloat(newPrice),
+      flight_date: newDate,
+      dep_time: newTime,
+      availability: parseInt(newAvailability) // Posti iniziali
+    };
+    try {
+      const res = await fetch("http://localhost:3001/api/flights", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": "ChiaveSegretaAdmin123" // Password per admin
+        },
+        body: JSON.stringify(newFlightData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Volo aggiunto con successo!");
+        setFlights([...flights, { id: data.insertId, ...newFlightData }]);
+        // Reset campi
+        setNewDeparture("");
+        setNewDestination("");
+        setNewPrice("");
+        setNewDate("");
+        setNewTime("");
+        setNewAvailability("");
+      }
+    } catch (error) {
+      console.error("Errore aggiunta volo:", error);
+      alert("Errore durante l'aggiunta del volo. Controlla il server!");
+    }
+  }
   // 4. L'Acquisto
   async function handlePurchase(){
     if(!passengerName){
@@ -65,6 +114,38 @@ function App () {
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial' }}>
       <h1>Fly-Token: Scegli il tuo volo</h1>
+      {/* --- ZONA 0: IL BENVENUTO --- */}
+      <button onClick={() => {
+        if (isAdmin) {
+          setIsAdmin(false);
+        }
+        else {
+          const password = prompt("Inserisci la password per accedere alla modalità admin:");
+          if (password === "ChiaveSegretaAdmin123") {
+            setIsAdmin(true);
+          } else {
+            alert("Password errata! Accesso negato.");
+          }
+        }
+      }} 
+      style={{ marginBottom: '20px', padding: '10px', backgroundColor: isAdmin ? '#ffcccc' : '#cce5ff', cursor: 'pointer' }}>
+        {isAdmin ? "Torna alla vista cliente" : "Accedi come admin"}
+      </button>
+      {isAdmin && (
+        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#ffe6e6', borderRadius: '8px' }}>
+          <h2>Aggiungi un nuovo volo</h2>
+          <input type="text" placeholder="Partenza" value={newDeparture} onChange={(e) => setNewDeparture(e.target.value)} style={{ marginRight: '10px', padding: '5px' }} />
+          <input type="text" placeholder="Destinazione" value={newDestination} onChange={(e) => setNewDestination(e.target.value)} style={{ marginRight: '10px', padding: '5px' }} />
+          <input type="number" placeholder="Prezzo" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} style={{ marginRight: '10px', padding: '5px' }} />
+          <input type="date" placeholder="Data" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={{ marginRight: '10px', padding: '5px' }} />
+          <input type="time" placeholder="Orario" value={newTime} onChange={(e) => setNewTime(e.target.value)} style={{ marginRight: '10px', padding: '5px' }} />
+          <input type="number" placeholder="Posti disponibili" value={newAvailability} onChange={(e) => setNewAvailability(e.target.value)} style={{ marginRight: '10px', padding: '5px' }} />
+          <button onClick={handleCreateFlight} style={{ backgroundColor: 'green', color: 'white', padding: '10px', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            Aggiungi Volo
+          </button>
+        </div>
+      )}
+
 
       {/* --- ZONA 1: LA LISTA DEI VOLI --- */}
       <h3>Voli Disponibili:</h3>
@@ -131,6 +212,8 @@ function App () {
           </button>
         </div>
       )}
+
+
     </div>
   );
 }

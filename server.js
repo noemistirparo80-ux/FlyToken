@@ -1,36 +1,50 @@
-const http = require('http');//http è un modulo integrato in Node.js che consente di creare un server web.
-const FlightService = require('./services/FlightService');//importa il modulo FlightService, che contiene la logica per simulare l'acquisto di un volo. Questo modulo è definito in un file separato all'interno della cartella "services".
-const inizializzaDatabase = require('./database'); // Importiamo il ponte per MySQL
+const http = require('http'); 
+const FlightService = require('./services/FlightService'); 
 
-let db; // Variabile globale per la connessione al database
-// Prepariamo le regole CORS in un blocco unico per non dimenticarle mai
+// 1. Connessione al database ESATTAMENTE come da slide 52 del professore
+let mysql = require('mysql2'); 
+let connection = mysql.createConnection({ 
+    host     : 'localhost', 
+    user     : 'root', 
+    password : '', 
+    database : 'flytoken_db' 
+}); 
+connection.connect(); 
+
+// Regole CORS per far comunicare React e Node
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'OPTIONS, POST, GET',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 };
 
-const server = http.createServer(async (req, res) => { 
+// 2. Creazione del server (Senza async/await, come da slide)
+const server = http.createServer(function(req, res) { 
 
+    // Gestione Preflight CORS
     if (req.method === 'OPTIONS') {
         res.writeHead(204, corsHeaders);
         return res.end();
     }
     
-    if (req.url === '/api/flights' && req.method === 'GET') { //controlla se la richiesta è per l'endpoint "/api/flights" e se il metodo HTTP è GET. Se entrambe le condizioni sono vere, procede a leggere il file JSON che contiene i dati dei voli.  
-        try {
-            const [rows] = await db.query("SELECT * FROM flights");
+    // --- A. AREA CLIENTE: VEDERE I VOLI ---
+    if (req.url === '/api/flights' && req.method === 'GET') { 
+        // Query ESATTAMENTE come da slide 53 del prof (uso delle callbacks)
+        connection.query('SELECT * FROM flights', function(err, result) { 
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'text/plain', ...corsHeaders });
+                return res.end('Errore database');
+            }
             res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
-            res.end(JSON.stringify(rows));
-        } catch (error) {
-            res.writeHead(500, { 'Content-Type': 'text/plain', ...corsHeaders });
-            res.end('Errore database');
-        }
+            res.end(JSON.stringify(result));
+        });
     }
-    else if (req.url === '/api/purchase' && req.method === 'POST'){ //controlla se la richiesta è per l'endpoint "/api/purchase" e se il metodo HTTP è POST. Se entrambe le condizioni sono vere, procede a leggere i dati della richiesta, che dovrebbero contenere le informazioni necessarie per simulare l'acquisto di un volo. 
+    
+    // --- B. AREA CLIENTE: COMPRARE UN BIGLIETTO ---
+    else if (req.url === '/api/purchase' && req.method === 'POST'){ 
         let body = '';
-        req.on('data', chunk => {body += chunk.toString(); });
-        req.on('end', async () => {
+        req.on('data', function(chunk) { body += chunk.toString(); });
+        req.on('end', function() {
             try {
                 const purchaseData = JSON.parse(body);
                 const purchaseResponse = FlightService.simulatePurchase(
@@ -40,61 +54,73 @@ const server = http.createServer(async (req, res) => {
                 );
                 const ticket = purchaseResponse.ticket;
 
-                // Salva nella tabella 'reservations'
-                await db.query(
-                    `INSERT INTO reservations (ticket_id, passenger_name, flight_id, nft_id, final_price, status) 
-                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    [ticket.id, ticket.passengerName, ticket.flight.id, ticket.idNFT, ticket.finalPrice, ticket.status]
-                );
+                // 1a Query: Salva la prenotazione (Callback stile prof)
+                const insertQuery = `INSERT INTO reservations (ticket_id, passenger_name, flight_id, nft_id, final_price, status) VALUES (?, ?, ?, ?, ?, ?)`;
+                connection.query(insertQuery, [ticket.id, ticket.passengerName, ticket.flight.id, ticket.idNFT, ticket.finalPrice, ticket.status], function(err, result) {
+                    if (err) {
+                        res.writeHead(500, corsHeaders);
+                        return res.end("Errore salvataggio acquisto");
+                    }
 
-                // Scala un posto dal volo
-                await db.query("UPDATE flights SET availability = availability - 1 WHERE id = ?", [ticket.flight.id]);
-
-                res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
-                res.end(JSON.stringify(purchaseResponse));
+                    // 2a Query: Scala il posto dal volo (Callback annidata)
+                    connection.query("UPDATE flights SET availability = availability - 1 WHERE id = ?", [ticket.flight.id], function(err2, result2) {
+                        if (err2) {
+                            res.writeHead(500, corsHeaders);
+                            return res.end("Errore aggiornamento posti");
+                        }
+                        
+                        res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
+                        res.end(JSON.stringify(purchaseResponse));
+                    });
+                });
             } catch (err) {
                 res.writeHead(400, corsHeaders);
-                res.end("Errore acquisto");
+                res.end("Errore dati inviati");
             }
         });
     }
-    // --- 3. AREA ADMIN: POST (Aggiunge nuovi voli - Protetto!) ---
+
+    // --- C. AREA ADMIN: AGGIUNGERE UN VOLO ---
     else if (req.url === '/api/flights' && req.method === 'POST') {
         const auth = req.headers['authorization'];
         
-        // Il controllo di sicurezza
+        // Controllo della password per proteggere il database
         if (auth !== 'ChiaveSegretaAdmin123') {
             res.writeHead(403, { 'Content-Type': 'application/json', ...corsHeaders });
             return res.end(JSON.stringify({ message: "Accesso negato" }));
         }
 
         let body = '';
-        req.on('data', chunk => { body += chunk.toString(); });
-        req.on('end', async () => {
+        req.on('data', function(chunk) { body += chunk.toString(); });
+        req.on('end', function() {
             try {
                 const f = JSON.parse(body);
-                await db.query(
-                    `INSERT INTO flights (departure, destination, flight_date, dep_time, price, availability) 
-                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    [f.departure, f.destination, f.flight_date, f.dep_time, f.price, f.availability]
-                );
-                res.writeHead(201, { 'Content-Type': 'application/json', ...corsHeaders });
-                res.end(JSON.stringify({ success: true, message: "Volo aggiunto!" }));
+                const insertFlightQuery = `INSERT INTO flights (departure, destination, flight_date, dep_time, price, availability) VALUES (?, ?, ?, ?, ?, ?)`;
+                
+                // Query per inserire il volo (Callback stile prof)
+                connection.query(insertFlightQuery, [f.departure, f.destination, f.flight_date, f.dep_time, f.price, f.availability], function(err, result) {
+                    if (err) {
+                        res.writeHead(500, corsHeaders);
+                        return res.end("Errore inserimento volo");
+                    }
+                    res.writeHead(201, { 'Content-Type': 'application/json', ...corsHeaders });
+                    res.end(JSON.stringify({ success: true, message: "Volo aggiunto!" }));
+                });
             } catch (err) {
-                res.writeHead(500, corsHeaders);
-                res.end("Errore inserimento volo");
+                res.writeHead(400, corsHeaders);
+                res.end("Errore dati inviati");
             }
         });
     }
+    
+    // --- ROTTA NON TROVATA ---
     else {
         res.writeHead(404, corsHeaders);
         res.end('Not Found');
     }
 });
 
-inizializzaDatabase().then(connection => {
-    db = connection; // Ora il database è pronto e salvato nella variabile!
-    server.listen(3001, () => {
-        console.log('🚀 Server running on port 3001 con MySQL!');
-    });
+// Avvio del server
+server.listen(3001, function() {
+    console.log('🚀 Server in ascolto sulla porta 3001 (Connesso a MySQL)');
 });
