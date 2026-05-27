@@ -6,7 +6,7 @@ function App () {
   const [flightSelected, setFlightSelected] = useState(null); 
   // Usiamo nomi coerenti per il passeggero
   const [passengerName, setPassengerName] = useState("");
-  const [ticket, setTicket] = useState([]);
+  const [ticket, setTicket] = useState(null);
 
   // 2. Il caricamento iniziale
   useEffect(() => { 
@@ -52,9 +52,9 @@ function App () {
       const data = await res.json();
 
       if (data.success) {
-        alert(`${data.message}! NFT: ${data.ticket.idNFT}`);
         setFlightSelected(null); 
-        setPassengerName("");    
+        setPassengerName(""); 
+        setTicket(data.ticket);   
       }
     } catch (error) {
       console.error("Errore acquisto:", error);
@@ -108,6 +108,29 @@ function App () {
         </div>
       )}
 
+      {/* --- ZONA 3: LA RICEVUTA DI ACQUISTO (Appare solo se c'è un biglietto) --- */}
+      {ticket && (
+        <div style={{ padding: '20px', backgroundColor: '#e6ffe6', border: '2px solid #4CAF50', borderRadius: '10px', marginBottom: '30px' }}>
+          <h2 style={{ color: '#4CAF50', marginTop: 0 }}>Acquisto Completato! </h2>
+          <p>Grazie per aver viaggiato con noi, <strong>{ticket.passengerName}</strong>.</p>
+          
+          <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '5px', border: '1px dashed gray' }}>
+            <h4 style={{ margin: '0 0 10px 0' }}>Dettagli del tuo Biglietto</h4>
+            <p><strong>Codice Prenotazione:</strong> {ticket.id}</p>
+            <p><strong>Tratta:</strong> {ticket.flight.departure} ➔ {ticket.flight.destination}</p>
+            <p><strong>Prezzo Pagato:</strong> €{ticket.finalPrice}</p>
+            <p><strong>Stato:</strong> <span style={{color: 'green', fontWeight: 'bold'}}>{ticket.status}</span></p>
+            
+            <hr style={{ border: '0.5px solid #eee' }} />
+            <h4 style={{ color: 'blue', margin: '10px 0 5px 0' }}>🔗 Certificato Blockchain</h4>
+            <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '1.2em' }}>{ticket.idNFT}</p>
+          </div>
+          
+          <button onClick={() => setTicket(null)} style={{ marginTop: '15px', padding: '10px', cursor: 'pointer' }}>
+            Chiudi ricevuta e prenota un altro volo
+          </button>
+        </div>
+      )}
     </div>
   );
 }
