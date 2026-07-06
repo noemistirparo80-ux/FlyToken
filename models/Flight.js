@@ -1,5 +1,5 @@
 class Flight {
-    constructor(id, departure, destination, flight_date, dep_time, duration, price, availability){
+    constructor(id, departure, destination, flight_date, dep_time, duration, price, availability, numTickets) {
         this.id =id;
         this.departure = departure;
         this.destination = destination;
@@ -8,5 +8,6 @@ class Flight {
         this.duration = duration;
         this.price =price;
         this.availability = availability;
+        this.numTickets = numTickets;
     }
 }

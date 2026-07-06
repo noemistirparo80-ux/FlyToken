@@ -2,10 +2,11 @@ const Flight = require('./Flight');
 const User =require('./User');
 
 class Reservation {
-    constructor(id, passengerName, flightObject, userObject, status, idNFT, finalPrice) {
+    constructor(id, passengerName, numTickets, flightObject, userObject, status, idNFT, finalPrice) {
         this.id = id;
         this.flight = flightObject;
         this.passengerName = passengerName;
+        this.numTickets = numTickets;
         this.user = userObject;
         this.status = status;
         this.finalPrice = finalPrice;

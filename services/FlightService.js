@@ -2,7 +2,7 @@ const Reservation = require('../models/Reservation');
 
 const FlightService = {
     //metodo che gestisce la logica di acquisto
-    simulatePurchase: (flightObject, userObject, passengerName) =>{
+    simulatePurchase: (flightObject, userObject, passengerName, numTickets) =>{
         //genera id casuale
         const idReservation = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -13,6 +13,7 @@ const FlightService = {
         const newTicket = new Reservation(
             idReservation,
             passengerName,
+            numTickets,
             flightObject,
             userObject,
             "Confermato",
