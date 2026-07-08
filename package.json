@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/noemistirparo80-ux/FlyToken#readme",
   "dependencies": {
-    "mysql2": "^3.22.3"
+    "mysql2": "^3.22.4"
   }
 }
