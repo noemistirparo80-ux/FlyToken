@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/noemistirparo80-ux/FlyToken#readme",
   "dependencies": {
+    "algosdk": "^3.6.0",
     "mysql2": "^3.22.3"
   }
 }

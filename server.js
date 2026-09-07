@@ -1,5 +1,6 @@
 const http = require('http'); 
 const FlightService = require('./services/FlightService'); 
+const AlgorandService = require('./services/AlgorandService');
 
 // 1. Connessione al database ESATTAMENTE come da slide 52 del professore
 let mysql = require('mysql2'); 
@@ -19,7 +20,7 @@ const corsHeaders = {
 };
 
 // 2. Creazione del server (Senza async/await, come da slide)
-const server = http.createServer(function(req, res) { 
+const server = http.createServer( function(req, res) { 
 
     // Gestione Preflight CORS
     if (req.method === 'OPTIONS') {
@@ -44,15 +45,27 @@ const server = http.createServer(function(req, res) {
     else if (req.url === '/api/purchase' && req.method === 'POST'){ 
         let body = '';
         req.on('data', function(chunk) { body += chunk.toString(); });
-        req.on('end', function() {
+        req.on('end', async function() {
             try {
                 const purchaseData = JSON.parse(body);
+
+                //Chiamata AlgorandService per creare l'NFT del biglietto
+                //il server si mette in pausa finché non riceve la risposta della blockchain
+                const realTxtId = await AlgorandService.mintTicketNFT(
+                    purchaseData.passengerName, 
+                    purchaseData.flightObject, 
+                    purchaseData.numTickets);
+
                 const purchaseResponse = FlightService.simulatePurchase(
                     purchaseData.flightObject,
                     purchaseData.userObject,
                     purchaseData.passengerName,
                     purchaseData.numTickets
                 );
+
+                //sovrascriviamo l'NFT ID fittizio con quello reale della blockchain
+                purchaseResponse.ticket.idNFT = realTxtId;
+
                 const ticket = purchaseResponse.ticket;
 
                 // 1a Query: Salva la prenotazione (Callback stile prof)
